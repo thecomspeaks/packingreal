@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tenkasi Packing Material Register</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#f3f6fa;--card:#fff;--ink:#1c2733;--mute:#6b7a8a;--line:#dde4ec;--brand:#1f4e79;--brand2:#2f6fa8;--ok:#1e9e5a;--bad:#d64545;--warn:#e0a21b}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--brand);color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+header h1{font-size:18px;margin:0;font-weight:600}
+.hr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.14);padding:6px 10px;border-radius:20px;font-size:13px;display:none}
+.status{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);padding:6px 10px;border-radius:20px;cursor:pointer;font-size:13px;user-select:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--bad)}
+.dot.ok{background:#4be08f}.dot.busy{background:var(--warn)}.dot.err{background:#ff6b6b}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;border-radius:7px}
+button:hover{background:#eef3f8}
+button:disabled{opacity:.5;cursor:default}
+button.pri{background:var(--brand2);border-color:var(--brand2);color:#fff}
+button.pri:hover,button.pri:focus{background:var(--brand)}
+button.hd{background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
+button.hd:hover{background:rgba(255,255,255,.25)}
+button.sm{padding:3px 8px;font-size:12px}
+main{max-width:1280px;margin:0 auto;padding:14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{border-radius:20px;padding:7px 18px;background:#fff}
+.tab.on{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 10px;color:var(--brand);text-transform:uppercase;letter-spacing:.04em}
+.card h2 small{text-transform:none;letter-spacing:0;font-weight:400}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.head5{display:grid;gap:10px;grid-template-columns:repeat(5,1fr)}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;font:inherit;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+input:focus,select:focus,button:focus-visible{outline:2px solid #b6d3ee;border-color:var(--brand2)}
+.f{position:relative}
+.sug{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:30;max-height:230px;overflow:auto;display:none}
+.sug div{padding:7px 10px;cursor:pointer}
+.sug div.on,.sug div:hover{background:#e6f0fa}
+.sug b{color:var(--brand2)}
+/* item lines */
+.lines{margin-top:14px}
+.line{display:grid;grid-template-columns:3fr 1.1fr 1.1fr 1.1fr 34px;gap:8px;margin-bottom:8px;align-items:center}
+.line.head{font-size:12px;color:var(--mute);margin-bottom:3px}
+.la{text-align:right;padding-right:6px;font-weight:600}
+.line .x{padding:5px 0;color:var(--bad)}
+.foot{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px}
+.foot .sp{flex:1}
+.sw{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);margin:0}
+.sw input{display:none}
+.sw i{width:36px;height:20px;border-radius:10px;background:#c5ced8;position:relative;transition:.2s;flex:none}
+.sw i:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.sw input:checked+i{background:var(--ok)}
+.sw input:checked+i:after{left:18px}
+.itot{font-weight:600}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.quick button{padding:5px 10px;font-size:12.5px;border-radius:16px}
+.actions{display:flex;gap:8px;align-items:end}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%}
+.main{min-width:900px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:#eaf1f8;position:sticky;top:0;font-size:12.5px}
+td.n,th.n{text-align:right}
+td.c,th.c{width:34px;padding-left:10px;padding-right:2px}
+td.c input,th.c input{width:auto}
+td.tg{width:20px;padding:8px 2px;color:var(--mute)}
+tr.inv{cursor:pointer}
+tr.inv:hover td{background:#f7fafd}
+tr.det td{background:#fafcfe;white-space:normal}
+.mini{width:auto;min-width:380px;margin:2px 0 4px}
+.mini th{position:static;background:#f0f5fa;font-size:12px}
+.mini td,.mini th{padding:5px 12px;border-bottom:1px solid #e8eef4}
+.totals{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-weight:600}
+.totals span{color:var(--mute);font-weight:400}
+.empty{padding:30px;text-align:center;color:var(--mute)}
+.banner{background:#fff6dd;border:1px solid #efd88f;padding:10px 14px;border-radius:8px;margin-bottom:14px;display:none}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:14px}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:12px;padding:18px;width:100%;max-width:560px;max-height:90vh;overflow:auto}
+.box h3{margin:0 0 10px}
+.rad{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink);margin:7px 0}
+.rad input{width:auto}
+.grid3{display:grid;gap:8px;grid-template-columns:2fr 1fr 1fr;margin:4px 0 6px 24px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.cols label{display:flex;gap:6px;align-items:center;font-size:13.5px;color:var(--ink);margin:0}
+.cols input{width:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.sec{font-size:12px;color:var(--mute);margin-top:14px;text-transform:uppercase;letter-spacing:.04em}
+.cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
+.cards div{background:#eaf1f8;border-radius:8px;padding:10px 12px}
+.cards span{display:block;font-size:12px;color:var(--mute)}
+.cards b{font-size:17px}
+.blk{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;overflow:hidden}
+.blk .bh{background:#eaf1f8;padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px 18px;font-weight:600}
+.blk .bh span{font-weight:400;color:var(--mute)}
+.blk table{min-width:0}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1c2733;color:#fff;padding:9px 16px;border-radius:8px;display:none;z-index:99;max-width:90%}
+small{color:var(--mute)}
+@media(max-width:820px){.head5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){header h1{font-size:15px}.line{grid-template-columns:2.4fr 1fr 1fr 34px}.line .la,.line.head .la{display:none}.grid3{grid-template-columns:1fr;margin-left:0}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tenkasi Packing Material Register</h1>
+  <div class="hr">
+    <div class="chip" id="staff"></div>
+    <div class="status" id="status" title="Click to check connection"><span class="dot err" id="dot"></span><span id="stText">Not connected</span></div>
+    <button class="hd" id="btnDownload">Download</button>
+    <button class="hd" id="btnSettings">Settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="banner" id="banner">The register is not connected to a Google Sheet yet. Click <b>Settings</b> and paste your Web App URL.</div>
+
+  <div class="tabs">
+    <button class="tab on" data-t="entries">Entries</button>
+    <button class="tab" data-t="dealer">Dealer View</button>
+  </div>
+
+  <!-- ================= ENTRIES TAB ================= -->
+  <div id="tabEntries">
+    <div class="card" id="formCard">
+      <h2>New entry</h2>
+      <div class="head5">
+        <div><label>Date</label><input type="date" id="fDate"></div>
+        <div><label>Invoice No</label><input id="fInvoice" autocomplete="off"></div>
+        <div class="f"><label>Dealer</label><input id="fDealer" autocomplete="off"></div>
+        <div class="f"><label>Parcel Company</label><input id="fParcel" autocomplete="off"></div>
+        <div><label>Parcel Amount</label><input id="fParcelAmt" inputmode="decimal" autocomplete="off"></div>
+      </div>
+
+      <div class="lines" id="lines">
+        <div class="line head"><span>Item</span><span>Unit</span><span>Rate</span><span class="la">Amount</span><span></span></div>
+      </div>
+
+      <div class="foot">
+        <button id="btnAddLine" type="button">+ Add item line</button>
+        <label class="sw" title="Fill the rate from the last time this item was entered"><input type="checkbox" id="autofill"><i></i>Autofill rate</label>
+        <span class="sp"></span>
+        <span class="itot">Items total: <span id="iTotal">0.00</span></span>
+        <button class="pri" id="btnSave" type="button">Save</button>
+      </div>
+      <small>Enter = next box. On the last Rate box, Enter adds a new item line. Press Enter on an empty Item box to jump to Save. Ctrl+Enter saves.</small>
+    </div>
+
+    <div class="card">
+      <h2>Filters</h2>
+      <div class="quick">
+        <button data-q="today">Today</button>
+        <button data-q="week">This Week</button>
+        <button data-q="month">This Month</button>
+        <button data-q="lastmonth">Last Month</button>
+        <button data-q="year">This Year</button>
+        <button data-q="all">All Time</button>
+      </div>
+      <div class="grid">
+        <div><label>Month</label><input type="month" id="flMonth"></div>
+        <div><label>From date</label><input type="date" id="flFrom"></div>
+        <div><label>To date</label><input type="date" id="flTo"></div>
+        <div><label>Dealer</label><select id="flDealer"></select></div>
+        <div><label>Item</label><select id="flItem"></select></div>
+        <div><label>Parcel Company</label><select id="flParcel"></select></div>
+        <div><label>Parcel</label>
+          <select id="flHasParcel"><option value="">All entries</option><option value="with">With parcel</option><option value="without">Without parcel</option></select></div>
+        <div><label>Rate min</label><input id="flRateMin" inputmode="decimal"></div>
+        <div><label>Rate max</label><input id="flRateMax" inputmode="decimal"></div>
+        <div><label>Amount min</label><input id="flAmtMin" inputmode="decimal"></div>
+        <div><label>Amount max</label><input id="flAmtMax" inputmode="decimal"></div>
+        <div><label>Parcel amount min</label><input id="flPaMin" inputmode="decimal"></div>
+        <div><label>Parcel amount max</label><input id="flPaMax" inputmode="decimal"></div>
+        <div><label>Search (invoice, dealer, item...)</label><input id="flSearch" placeholder="type to search"></div>
+        <div><label>Sort by</label>
+          <select id="flSort">
+            <option value="dateDesc">Date - newest first</option>
+            <option value="dateAsc">Date - oldest first</option>
+            <option value="amtDesc">Invoice amount - high to low</option>
+            <option value="paDesc">Parcel amount - high to low</option>
+            <option value="dealerAsc">Dealer A-Z</option>
+            <option value="invoiceAsc">Invoice No</option>
+          </select></div>
+        <div class="actions"><button id="btnClear">Clear filters</button><button id="btnReload">Refresh</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Entries <small id="rangeLabel"></small></h2>
+      <div class="foot" style="margin:0 0 10px">
+        <small>One line per invoice. Click a line to see all its items. Saved entries can be changed only in the Google Sheet (press Refresh after).</small>
+        <span class="sp"></span>
+        <small id="selInfo"></small>
+        <button class="pri sm" id="btnDlSel" style="display:none">Download ticked</button>
+      </div>
+      <div class="tw">
+        <table class="main">
+          <thead><tr>
+            <th class="c"><input type="checkbox" id="selAll" title="Tick all shown"></th><th></th>
+            <th>Date</th><th>Invoice No</th><th>Dealer</th><th>Items</th>
+            <th class="n">Amount</th><th>Parcel Company</th><th class="n">Parcel Amount</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="empty" style="display:none"></div>
+      </div>
+      <div class="totals">
+        <div><span>Invoices:</span> <b id="tInv">0</b></div>
+        <div><span>Item lines:</span> <b id="tCount">0</b></div>
+        <div><span>Total Amount:</span> <b id="tAmt">0.00</b></div>
+        <div><span>Total Parcel Amount:</span> <b id="tPa">0.00</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DEALER VIEW TAB ================= -->
+  <div id="tabDealer" style="display:none">
+    <div class="card">
+      <h2>Dealer view <small>- see what was received from a dealer</small></h2>
+      <div class="quick">
+        <button data-dq="month">This Month</button>
+        <button data-dq="lastmonth">Last Month</button>
+        <button data-dq="year">This Year</button>
+        <button data-dq="all">All Time</button>
+      </div>
+      <div class="grid">
+        <div><label>Dealer</label><select id="dvDealer"></select></div>
+        <div><label>Month</label><input type="month" id="dvMonth"></div>
+        <div><label>From date</label><input type="date" id="dvFrom"></div>
+        <div><label>To date</label><input type="date" id="dvTo"></div>
+      </div>
+      <div class="row">
+        <button class="pri" id="dvPdfMain">PDF - Main</button>
+        <button class="pri" id="dvPdfDetail">PDF - Detail</button>
+        <button id="dvXlsx">Excel</button>
+      </div>
+    </div>
+    <div id="dvOut"></div>
+  </div>
+</main>
+
+<!-- Settings -->
+<div class="modal" id="mSettings"><div class="box">
+  <h3>Settings</h3>
+  <label>Google Apps Script Web App URL</label>
+  <input id="setUrl" placeholder="https://script.google.com/macros/s/.../exec">
+  <p><small>Deploy the Apps Script as a Web app (access: Anyone), copy the URL and paste it here. It is saved in this browser.</small></p>
+  <div class="row"><button class="pri" id="setSave">Save &amp; Test</button><button data-close>Close</button></div>
+</div></div>
+
+<!-- Download -->
+<div class="modal" id="mDownload"><div class="box">
+  <h3>Download</h3>
+  <div class="sec" style="margin-top:0">What to download</div>
+  <label class="rad"><input type="radio" name="scope" value="shown" checked> Everything shown in the Entries table (after filters)</label>
+  <label class="rad"><input type="radio" name="scope" value="selected" id="rdSel"> Only the ticked entries <span id="selN"></span></label>
+  <label class="rad"><input type="radio" name="scope" value="dealer"> One dealer for a period</label>
+  <div class="grid3" id="dlDealerBox">
+    <div><label>Dealer</label><select id="dlDealer"></select></div>
+    <div><label>From</label><input type="date" id="dlFrom"></div>
+    <div><label>To</label><input type="date" id="dlTo"></div>
+  </div>
+
+  <div class="sec">PDF</div>
+  <div class="row" style="margin-top:6px">
+    <button class="pri" id="dlPdfMain" title="One line per invoice">PDF - Main (one line per invoice)</button>
+    <button class="pri" id="dlPdfDetail" title="All items under each invoice">PDF - Detail (all items)</button>
+  </div>
+
+  <div class="sec">Excel / CSV (one row per item) - columns</div>
+  <div class="cols" id="colChoices"></div>
+  <div class="row" style="margin-top:6px">
+    <button id="dlXlsx">Excel (.xlsx)</button>
+    <button id="dlCsv">CSV</button>
+    <button data-close>Close</button>
+  </div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const URL_KEY = 'tkRegisterUrl', AUTO_KEY = 'tkAutofill';
+let WEB_URL = localStorage.getItem(URL_KEY) || '';
+let rows = [];            // one item line per row (as in the Sheet)
+let invAll = [];          // all invoices (rows grouped by invoice)
+let curInv = [];          // invoices currently shown in the Entries table
+let sugg = {'Item':[], 'Dealer':[], 'Parcel Company':[]};
+let staff = null;
+let lastRate = {};
+let dirty = false;
+const selected = new Set();   // ticked invoices
+const openG = new Set();      // invoices whose items are expanded
+
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const fmtD = s => { if(!s) return ''; const p = s.split('-'); return p.length===3 ? p[2]+'-'+p[1]+'-'+p[0] : s; };
+const money = n => (Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+const uniq = a => { const m={}; a.forEach(x=>{ if(x){ const k=String(x).toLowerCase(); if(!m[k]) m[k]=x; } }); return Object.values(m); };
+const clean = s => String(s||'').trim().replace(/\s+/g,' ');
+const sumBy = (a,k) => a.reduce((t,x)=>t+(Number(x[k])||0),0);
+function toast(msg, ms=2800){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',ms); }
+function numOnly(el){
+  el.addEventListener('input',()=>{
+    let v = el.value.replace(/[^0-9.]/g,''); const p = v.indexOf('.');
+    if(p>=0) v = v.slice(0,p+1)+v.slice(p+1).replace(/\./g,'');
+    if(v!==el.value) el.value = v;
+  });
+}
+function lastDay(ym){ const [y,m]=ym.split('-').map(Number); return iso(new Date(y,m,0)); }
+function rangeFor(q){
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  if(q==='today') return [iso(now),iso(now),''];
+  if(q==='week'){ const d=(now.getDay()+6)%7; return [iso(new Date(y,m,now.getDate()-d)), iso(new Date(y,m,now.getDate()-d+6)), '']; }
+  if(q==='month') return [iso(new Date(y,m,1)), iso(new Date(y,m+1,0)), y+'-'+pad(m+1)];
+  if(q==='lastmonth'){ const s=new Date(y,m-1,1); return [iso(s), iso(new Date(y,m,0)), s.getFullYear()+'-'+pad(s.getMonth()+1)]; }
+  if(q==='year') return [y+'-01-01', y+'-12-31', ''];
+  return ['','',''];
+}
+
+/* ---------- grouping: item lines -> invoices ---------- */
+function groupRows(list){
+  const m = new Map();
+  list.forEach(r=>{
+    const key = r.groupId || ('m|'+r.date+'|'+r.invoice+'|'+r.dealer);
+    let g = m.get(key);
+    if(!g){ g = {groupId:key, date:r.date, invoice:r.invoice, dealer:r.dealer, parcelCompany:'', parcel:0, lines:[], idx:r.idx}; m.set(key,g); }
+    g.lines.push(r);
+    if(r.parcelCompany && !g.parcelCompany) g.parcelCompany = r.parcelCompany;
+    g.parcel += Number(r.parcelAmount)||0;
+    if(r.idx > g.idx) g.idx = r.idx;
+  });
+  const out = [...m.values()];
+  out.forEach(g=>{ g.total = sumBy(g.lines,'amount'); });
+  return out;
+}
+function itemSummary(g){
+  const n = g.lines.map(l=>l.item);
+  return n.length<=2 ? n.join(', ') : n.slice(0,2).join(', ') + ' +' + (n.length-2) + ' more';
+}
+function totalsOf(invs){
+  return {invoices: invs.length, lines: invs.reduce((a,g)=>a+g.lines.length,0), amount: sumBy(invs,'total'), parcel: sumBy(invs,'parcel')};
+}
+
+/* ---------- staff ---------- */
+function staffText(){
+  if(!staff || !staff.name) return '';
+  return (staff.designation||'Packing In-charge') + ': ' + staff.name + (staff.ec ? '  |  EC No: ' + staff.ec : '');
+}
+function renderStaff(){ const t=staffText(); const el=$('staff'); el.textContent=t; el.style.display = t ? 'block' : 'none'; }
+
+/* ---------- connection ---------- */
+function setStatus(state, text){ $('dot').className='dot '+state; $('stText').textContent=text; }
+function apiUrl(action){ return WEB_URL + (WEB_URL.includes('?')?'&':'?') + 'action=' + action + '&_=' + Date.now(); }
+async function apiGet(action){
+  const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 25000);
+  try{ const r = await fetch(apiUrl(action), {signal: ctl.signal}); return await r.json(); }
+  finally{ clearTimeout(to); }
+}
+async function apiPost(payload){
+  const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 30000);
+  try{ const r = await fetch(WEB_URL, {method:'POST', body: JSON.stringify(payload), signal: ctl.signal}); return await r.json(); }
+  finally{ clearTimeout(to); }
+}
+async function ping(silent){
+  if(!WEB_URL){ setStatus('err','Not connected'); $('banner').style.display='block'; return false; }
+  $('banner').style.display='none';
+  setStatus('busy','Checking...');
+  try{
+    const r = await apiGet('ping');
+    if(r && r.ok){ setStatus('ok','Connected'); staff = r.staff || null; renderStaff(); return true; }
+    throw new Error((r&&r.error)||'Bad reply');
+  }catch(e){
+    setStatus('err','Not connected');
+    if(!silent) toast('Cannot reach the Google Sheet. Check the URL, deployment access (Anyone) and internet.');
+    return false;
+  }
+}
+async function loadAll(){
+  if(!WEB_URL){ render(); renderDealer(); return; }
+  setStatus('busy','Syncing...');
+  try{
+    const r = await apiGet('all');
+    if(!r.ok) throw new Error(r.error);
+    rows = (r.rows || []).map((x,i)=>Object.assign({idx:i}, x));
+    invAll = groupRows(rows);
+    // forget ticked / opened invoices that no longer exist
+    const ids = new Set(invAll.map(g=>g.groupId));
+    [...selected].forEach(i=>{ if(!ids.has(i)) selected.delete(i); });
+    [...openG].forEach(i=>{ if(!ids.has(i)) openG.delete(i); });
+    sugg = Object.assign({'Item':[], 'Dealer':[], 'Parcel Company':[]}, r.suggestions||{});
+    staff = r.staff || null; renderStaff();
+    buildLastRate();
+    setStatus('ok','Connected'); $('banner').style.display='none';
+    buildFilterOptions(); render(); renderDealer();
+  }catch(e){
+    setStatus('err','Not connected');
+    toast('Could not load data: ' + (e.message||e));
+  }
+}
+function buildLastRate(){
+  lastRate = {};
+  [...rows].sort((a,b)=>a.date.localeCompare(b.date)||a.idx-b.idx).forEach(r=>{
+    if(r.item && r.rate!=='' && r.rate!=null) lastRate[r.item.toLowerCase()] = r.rate;
+  });
+}
+
+/* ---------- suggestions ---------- */
+function attachSuggest(input, getList, onPick){
+  const box = document.createElement('div'); box.className='sug';
+  input.parentNode.appendChild(box);
+  let list = [], idx = -1;
+  const query = () => input.value.trim();
+  function hide(){ box.style.display='none'; idx=-1; }
+  function show(){
+    const q = query().toLowerCase();
+    list = getList().filter(s => !q || s.toLowerCase().includes(q))
+      .sort((a,b)=>{ const as=a.toLowerCase().startsWith(q), bs=b.toLowerCase().startsWith(q); return as===bs ? a.localeCompare(b) : as ? -1 : 1; })
+      .slice(0,8);
+    idx = -1;
+    if(!list.length){ hide(); return; }
+    box.innerHTML = list.map((s,i)=>{
+      const k = s.toLowerCase().indexOf(q);
+      const label = q && k>=0 ? esc(s.slice(0,k))+'<b>'+esc(s.slice(k,k+q.length))+'</b>'+esc(s.slice(k+q.length)) : esc(s);
+      return '<div data-i="'+i+'">'+label+'</div>';
+    }).join('');
+    box.style.display='block';
+  }
+  function pick(s){ input.value = s; hide(); if(onPick) onPick(); }
+  function mark(){ [...box.children].forEach((c,i)=>c.classList.toggle('on', i===idx)); }
+  input.addEventListener('input', show);
+  input.addEventListener('focus', show);
+  input.addEventListener('blur', ()=>{
+    const v = clean(input.value);
+    const m = getList().find(s=>s.toLowerCase()===v.toLowerCase());
+    input.value = m || v;
+    setTimeout(hide,150);
+  });
+  input.addEventListener('keydown', e=>{
+    if(box.style.display!=='block') return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); idx=(idx+1)%list.length; mark(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); idx=(idx-1+list.length)%list.length; mark(); }
+    else if((e.key==='Enter'||e.key==='Tab') && idx>=0){ pick(list[idx]); }   // Enter/Tab then moves to the next box
+    else if(e.key==='Escape') hide();
+  });
+  box.addEventListener('mousedown', e=>{ e.preventDefault(); const d=e.target.closest('[data-i]'); if(d){ pick(list[+d.dataset.i]); input.focus(); } });
+}
+const itemList = () => uniq([...sugg['Item'], ...rows.map(r=>r.item)]);
+attachSuggest($('fDealer'), ()=>uniq([...sugg['Dealer'], ...rows.map(r=>r.dealer)]));
+attachSuggest($('fParcel'), ()=>uniq([...sugg['Parcel Company'], ...rows.map(r=>r.parcelCompany)]));
+numOnly($('fParcelAmt'));
+
+/* ---------- item lines (entry form) ---------- */
+function lineEls(){ return [...document.querySelectorAll('#lines .line:not(.head)')]; }
+function addLine(v){
+  v = v || {};
+  const d = document.createElement('div'); d.className='line';
+  d.innerHTML =
+    '<div class="f"><input class="li" placeholder="Item" autocomplete="off"></div>'+
+    '<input class="lu" placeholder="Unit" inputmode="decimal" autocomplete="off">'+
+    '<input class="lr" placeholder="Rate" inputmode="decimal" autocomplete="off">'+
+    '<div class="la">0.00</div>'+
+    '<button class="x" type="button" title="Remove this line" tabindex="-1">&#10005;</button>';
+  $('lines').appendChild(d);
+  const li=d.querySelector('.li'), lu=d.querySelector('.lu'), lr=d.querySelector('.lr');
+  li.value = v.item||''; lu.value = v.unit===undefined||v.unit===''?'':v.unit; lr.value = v.rate===undefined||v.rate===''?'':v.rate;
+  attachSuggest(li, itemList, ()=>autofillRate(d));
+  li.addEventListener('blur', ()=>autofillRate(d));
+  numOnly(lu); numOnly(lr);
+  lu.addEventListener('input', recalc);
+  lr.addEventListener('input', ()=>{ lr.dataset.auto=''; recalc(); });
+  d.querySelector('.x').onclick = ()=>{
+    if(lineEls().length<=1){ li.value=''; lu.value=''; lr.value=''; lr.dataset.auto=''; }
+    else d.remove();
+    recalc(); dirty = true;
+  };
+  recalc();
+  return d;
+}
+function clearLines(){ lineEls().forEach(l=>l.remove()); }
+function lineEmpty(l){ return !l.querySelector('.li').value.trim() && !l.querySelector('.lu').value.trim() && !l.querySelector('.lr').value.trim(); }
+function recalc(){
+  let tot = 0;
+  lineEls().forEach(l=>{
+    const a = (num(l.querySelector('.lu').value)||0) * (num(l.querySelector('.lr').value)||0);
+    l.querySelector('.la').textContent = money(a); tot += a;
+  });
+  $('iTotal').textContent = money(tot);
+}
+function autofillRate(line){
+  if(!$('autofill').checked) return;
+  const it = line.querySelector('.li').value.trim().toLowerCase(); if(!it) return;
+  const r = line.querySelector('.lr');
+  if(lastRate[it]!==undefined && (r.value==='' || r.dataset.auto==='1')){ r.value = lastRate[it]; r.dataset.auto='1'; recalc(); }
+}
+$('autofill').checked = localStorage.getItem(AUTO_KEY) !== '0';
+$('autofill').onchange = e=>{ localStorage.setItem(AUTO_KEY, e.target.checked ? '1' : '0'); toast('Autofill rate ' + (e.target.checked ? 'ON' : 'OFF')); };
+$('btnAddLine').onclick = ()=>{ addLine().querySelector('.li').focus(); };
+
+/* ---------- Enter = next box ---------- */
+function fieldOrder(){
+  const f = [$('fDate'),$('fInvoice'),$('fDealer'),$('fParcel'),$('fParcelAmt')];
+  lineEls().forEach(l=>f.push(l.querySelector('.li'), l.querySelector('.lu'), l.querySelector('.lr')));
+  return f;
+}
+$('formCard').addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  const el = e.target; if(el.tagName!=='INPUT') return;
+  e.preventDefault();
+  if(e.ctrlKey || e.metaKey){ saveEntry(); return; }
+  const line = el.closest('.line');
+  if(el.classList.contains('li')) autofillRate(line);
+  const lines = lineEls(), last = lines[lines.length-1];
+  // Enter on an empty Item box of the last blank line -> go to Save
+  if(line && line===last && lines.length>1 && el.classList.contains('li') && lineEmpty(line)){ $('btnSave').focus(); return; }
+  const f = fieldOrder(), i = f.indexOf(el);
+  if(i === f.length-1){
+    if(lineEmpty(last)){ $('btnSave').focus(); return; }
+    addLine().querySelector('.li').focus();
+  } else f[i+1].focus();
+});
+$('formCard').addEventListener('input', ()=>{ dirty = true; });
+
+/* ---------- save a new entry (no edit / delete in this page) ---------- */
+function hasContent(){
+  return ['fInvoice','fDealer','fParcel','fParcelAmt'].some(i=>$(i).value.trim()) || lineEls().some(l=>!lineEmpty(l));
+}
+function resetForm(keepDate){
+  ['fInvoice','fDealer','fParcel','fParcelAmt'].forEach(i=>$(i).value='');
+  $('fDate').value = keepDate || iso(new Date());
+  clearLines(); addLine();
+  recalc(); dirty = false;
+}
+async function saveEntry(){
+  if(!WEB_URL){ toast('Set the Web App URL in Settings first.'); return; }
+  const header = {
+    date: $('fDate').value, invoice: clean($('fInvoice').value), dealer: clean($('fDealer').value),
+    parcelCompany: clean($('fParcel').value), parcelAmount: $('fParcelAmt').value
+  };
+  if(!header.date){ toast('Please enter the date.'); $('fDate').focus(); return; }
+  if(!header.dealer){ toast('Please enter the dealer.'); $('fDealer').focus(); return; }
+  const lines = [];
+  for(const l of lineEls()){
+    if(lineEmpty(l)) continue;
+    const item = clean(l.querySelector('.li').value), unit = l.querySelector('.lu').value, rate = l.querySelector('.lr').value;
+    if(!item){ toast('An item line has no item name.'); l.querySelector('.li').focus(); return; }
+    if(num(unit)===null){ toast('Enter the Unit for "'+item+'".'); l.querySelector('.lu').focus(); return; }
+    lines.push({item, unit, rate});
+  }
+  if(!lines.length){ toast('Add at least one item.'); lineEls()[0].querySelector('.li').focus(); return; }
+  $('btnSave').disabled = true; setStatus('busy','Saving...');
+  try{
+    const r = await apiPost({action:'save', header, lines});
+    if(!r.ok) throw new Error(r.error);
+    toast('Saved ' + lines.length + ' item line(s).');
+    const d = header.date;
+    resetForm(d);
+    if(($('flFrom').value && d < $('flFrom').value) || ($('flTo').value && d > $('flTo').value)){
+      $('flMonth').value = d.slice(0,7); setRange(d.slice(0,7)+'-01', lastDay(d.slice(0,7)));
+    }
+    await loadAll();
+    $('fDate').focus();
+  }catch(e){
+    setStatus('err','Not connected'); toast('Save failed: ' + (e.message||e));
+  }finally{ $('btnSave').disabled = false; }
+}
+$('btnSave').onclick = saveEntry;
+window.addEventListener('beforeunload', e=>{
+  if(dirty && hasContent()){ e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ---------- filters (Entries tab) ---------- */
+function setRange(from,to){ $('flFrom').value=from; $('flTo').value=to; render(); }
+function quick(q){
+  const [f,t,m] = rangeFor(q);
+  $('flMonth').value = m; setRange(f,t);
+}
+function fillSelect(sel, label, values){
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">'+label+'</option>' + values.map(v=>'<option>'+esc(v)+'</option>').join('');
+  if(values.includes(cur)) sel.value = cur;
+}
+function buildFilterOptions(){
+  const s = a => uniq(a).sort((x,y)=>x.localeCompare(y));
+  const dealers = s(rows.map(r=>r.dealer));
+  fillSelect($('flDealer'),'All dealers', dealers);
+  fillSelect($('flItem'),'All items', s(rows.map(r=>r.item)));
+  fillSelect($('flParcel'),'All parcel companies', s(rows.map(r=>r.parcelCompany)));
+  fillSelect($('dvDealer'),'Select a dealer', dealers);
+  fillSelect($('dlDealer'),'Select a dealer', dealers);
+}
+function clearFilters(){
+  ['flDealer','flItem','flParcel','flHasParcel','flRateMin','flRateMax','flAmtMin','flAmtMax','flPaMin','flPaMax','flSearch'].forEach(i=>$(i).value='');
+  $('flSort').value='dateDesc';
+  quick('month');
+}
+function filteredInvoices(){
+  const from=$('flFrom').value, to=$('flTo').value, dealer=$('flDealer').value, item=$('flItem').value.toLowerCase(),
+    parcel=$('flParcel').value, hp=$('flHasParcel').value,
+    rmin=num($('flRateMin').value), rmax=num($('flRateMax').value), amin=num($('flAmtMin').value), amax=num($('flAmtMax').value),
+    pmin=num($('flPaMin').value), pmax=num($('flPaMax').value), q=$('flSearch').value.trim().toLowerCase();
+  const out = [];
+  invAll.forEach(g=>{
+    if(from && g.date<from) return;
+    if(to && g.date>to) return;
+    if(dealer && g.dealer!==dealer) return;
+    if(parcel && g.parcelCompany!==parcel) return;
+    const has = !!g.parcelCompany || g.parcel>0;
+    if(hp==='with' && !has) return;
+    if(hp==='without' && has) return;
+    if(pmin!==null && g.parcel<pmin) return;
+    if(pmax!==null && g.parcel>pmax) return;
+    const ls = g.lines.filter(x=>{
+      if(item && x.item.toLowerCase()!==item) return false;
+      const rate=Number(x.rate)||0, amt=Number(x.amount)||0;
+      if(rmin!==null && rate<rmin) return false;
+      if(rmax!==null && rate>rmax) return false;
+      if(amin!==null && amt<amin) return false;
+      if(amax!==null && amt>amax) return false;
+      if(q && ![g.date,fmtD(g.date),g.invoice,g.dealer,g.parcelCompany,x.item,x.unit,x.rate,x.amount].join(' ').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    if(!ls.length) return;
+    out.push(Object.assign({}, g, {lines:ls, total:sumBy(ls,'amount')}));
+  });
+  const by = {
+    dateDesc:(a,b)=>b.date.localeCompare(a.date)||b.idx-a.idx,
+    dateAsc:(a,b)=>a.date.localeCompare(b.date)||a.idx-b.idx,
+    amtDesc:(a,b)=>b.total-a.total,
+    paDesc:(a,b)=>b.parcel-a.parcel,
+    dealerAsc:(a,b)=>a.dealer.localeCompare(b.dealer)||b.date.localeCompare(a.date),
+    invoiceAsc:(a,b)=>String(a.invoice).localeCompare(String(b.invoice),undefined,{numeric:true})
+  }[$('flSort').value];
+  return out.sort(by);
+}
+
+/* ---------- Entries table: ONE line per invoice ---------- */
+function render(){
+  const inv = filteredInvoices(); curInv = inv;
+  let h = '';
+  inv.forEach(g=>{
+    const open = openG.has(g.groupId), sel = selected.has(g.groupId), id = esc(g.groupId);
+    h += '<tr class="inv" data-g="'+id+'">'+
+      '<td class="c"><input type="checkbox" class="sel" data-g="'+id+'"'+(sel?' checked':'')+'></td>'+
+      '<td class="tg">'+(open?'&#9662;':'&#9656;')+'</td>'+
+      '<td>'+esc(fmtD(g.date))+'</td><td>'+esc(g.invoice)+'</td><td>'+esc(g.dealer)+'</td>'+
+      '<td>'+esc(itemSummary(g))+'</td>'+
+      '<td class="n">'+money(g.total)+'</td>'+
+      '<td>'+esc(g.parcelCompany)+'</td><td class="n">'+(g.parcel?money(g.parcel):'')+'</td></tr>';
+    if(open){
+      h += '<tr class="det"><td></td><td></td><td colspan="7"><table class="mini"><thead><tr><th>Item</th><th class="n">Unit</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'+
+        g.lines.map(l=>'<tr><td>'+esc(l.item)+'</td><td class="n">'+esc(l.unit)+'</td><td class="n">'+(l.rate===''?'':money(l.rate))+'</td><td class="n">'+money(l.amount)+'</td></tr>').join('')+
+        '</tbody></table></td></tr>';
+    }
+  });
+  $('tbody').innerHTML = h;
+  const em = $('empty');
+  em.style.display = inv.length ? 'none' : 'block';
+  em.textContent = !WEB_URL ? 'Connect your Google Sheet in Settings to see entries.' : rows.length ? 'No entries match these filters.' : 'No entries yet. Add your first entry above.';
+  const t = totalsOf(inv);
+  $('tInv').textContent = t.invoices; $('tCount').textContent = t.lines;
+  $('tAmt').textContent = money(t.amount); $('tPa').textContent = money(t.parcel);
+  const f=$('flFrom').value, to=$('flTo').value;
+  $('rangeLabel').textContent = f||to ? '(' + (f?fmtD(f):'start') + ' to ' + (to?fmtD(to):'latest') + ')' : '(all dates)';
+  $('selAll').checked = inv.length>0 && inv.every(g=>selected.has(g.groupId));
+  updateSel();
+}
+function updateSel(){
+  const n = selected.size;
+  $('selInfo').textContent = n ? n + ' ticked' : '';
+  $('btnDlSel').style.display = n ? '' : 'none';
+}
+$('tbody').addEventListener('click', e=>{
+  const cb = e.target.closest('input.sel');
+  if(cb){ cb.checked ? selected.add(cb.dataset.g) : selected.delete(cb.dataset.g); $('selAll').checked = curInv.length>0 && curInv.every(g=>selected.has(g.groupId)); updateSel(); return; }
+  const tr = e.target.closest('tr.inv'); if(!tr) return;
+  const id = tr.dataset.g;
+  openG.has(id) ? openG.delete(id) : openG.add(id);
+  render();
+});
+$('selAll').onchange = e=>{
+  curInv.forEach(g=> e.target.checked ? selected.add(g.groupId) : selected.delete(g.groupId));
+  render();
+};
+
+/* ---------- Dealer View tab ---------- */
+function dvInvoices(){
+  const d=$('dvDealer').value, from=$('dvFrom').value, to=$('dvTo').value;
+  if(!d) return [];
+  return invAll.filter(g=>g.dealer===d && (!from||g.date>=from) && (!to||g.date<=to))
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.idx-b.idx);
+}
+function dvPeriodText(){
+  const f=$('dvFrom').value, t=$('dvTo').value;
+  return f||t ? (f?fmtD(f):'start')+' to '+(t?fmtD(t):'latest') : 'all dates';
+}
+function renderDealer(){
+  const out = $('dvOut');
+  if(!$('dvDealer').value){ out.innerHTML = '<div class="card empty">Select a dealer to see what was received from them.</div>'; return; }
+  const inv = dvInvoices();
+  if(!inv.length){ out.innerHTML = '<div class="card empty">Nothing received from this dealer in this period.</div>'; return; }
+  const t = totalsOf(inv);
+  const m = new Map();
+  inv.forEach(g=>g.lines.forEach(l=>{
+    const k = l.item.toLowerCase(); let e = m.get(k);
+    if(!e){ e = {item:l.item, unit:0, amount:0}; m.set(k,e); }
+    e.unit += Number(l.unit)||0; e.amount += Number(l.amount)||0;
+  }));
+  const items = [...m.values()].sort((a,b)=>a.item.localeCompare(b.item));
+  let h = '<div class="card"><h2>'+esc($('dvDealer').value)+' <small>('+esc(dvPeriodText())+')</small></h2>'+
+    '<div class="cards"><div><span>Invoices</span><b>'+t.invoices+'</b></div><div><span>Item lines</span><b>'+t.lines+'</b></div>'+
+    '<div><span>Total amount</span><b>'+money(t.amount)+'</b></div><div><span>Total parcel amount</span><b>'+money(t.parcel)+'</b></div></div>'+
+    '<div class="sec" style="margin:0 0 6px">Item-wise total</div><div class="tw"><table><thead><tr><th>Item</th><th class="n">Total unit</th><th class="n">Amount</th></tr></thead><tbody>'+
+    items.map(e=>'<tr><td>'+esc(e.item)+'</td><td class="n">'+esc(+e.unit.toFixed(3))+'</td><td class="n">'+money(e.amount)+'</td></tr>').join('')+
+    '</tbody></table></div></div>'+
+    '<div class="card"><h2>Invoices</h2>'+
+    inv.map(g=>'<div class="blk"><div class="bh">'+esc(fmtD(g.date))+' <span>Invoice</span> '+esc(g.invoice||'-')+
+      (g.parcelCompany||g.parcel ? ' <span>Parcel</span> '+esc(g.parcelCompany)+(g.parcel?' '+money(g.parcel):'') : '')+
+      ' <span>Amount</span> '+money(g.total)+'</div><table><thead><tr><th>Item</th><th class="n">Unit</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>'+
+      g.lines.map(l=>'<tr><td>'+esc(l.item)+'</td><td class="n">'+esc(l.unit)+'</td><td class="n">'+(l.rate===''?'':money(l.rate))+'</td><td class="n">'+money(l.amount)+'</td></tr>').join('')+
+      '</tbody></table></div>').join('')+'</div>';
+  out.innerHTML = h;
+}
+function dvSetRange(f,t,m){ $('dvFrom').value=f; $('dvTo').value=t; $('dvMonth').value=m; renderDealer(); }
+
+/* ---------- download / export ---------- */
+const COLS = [
+  {k:'date',h:'Date',f:r=>fmtD(r.date)}, {k:'invoice',h:'Invoice No'}, {k:'dealer',h:'Dealer'}, {k:'item',h:'Item'},
+  {k:'unit',h:'Unit',num:true}, {k:'rate',h:'Rate',num:true,money:true}, {k:'amount',h:'Amount',num:true,money:true,sum:true},
+  {k:'parcelCompany',h:'Parcel Company'}, {k:'parcelAmount',h:'Parcel Amount',num:true,money:true,sum:true}
+];
+function chosenCols(){ const c = COLS.filter(c=>$('col_'+c.k).checked); if(!c.length) toast('Select at least one column.'); return c; }
+function lineRows(invs){
+  const out = [];
+  invs.forEach(g=>g.lines.forEach((l,i)=>out.push({
+    date:g.date, invoice:g.invoice, dealer:g.dealer, item:l.item, unit:l.unit, rate:l.rate, amount:l.amount,
+    parcelCompany: i===0 ? g.parcelCompany : '', parcelAmount: i===0 && g.parcel ? g.parcel : ''
+  })));
+  return out;
+}
+const fname = (tag,ext) => 'Tenkasi_'+tag+'_'+iso(new Date())+'.'+ext;
+const safe = s => String(s||'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
+function pdfHead(doc, sub, t){
+  doc.setFontSize(15); doc.text('Tenkasi Packing Material Register', 40, 40);
+  doc.setFontSize(10);
+  doc.text(sub, 40, 57);
+  doc.text('Invoices: '+t.invoices+'   |   Item lines: '+t.lines+'   |   Generated: '+fmtD(iso(new Date())), 40, 71);
+}
+function pdfStaff(doc){
+  const st = staffText(); if(!st) return;
+  let y = doc.lastAutoTable.finalY + 34;
+  if(y > doc.internal.pageSize.getHeight() - 50){ doc.addPage(); y = 60; }
+  doc.setFontSize(10); doc.text(st, 40, y);
+}
+function pageNo(doc){ doc.setFontSize(8); doc.text('Page '+doc.internal.getNumberOfPages(), doc.internal.pageSize.getWidth()-70, doc.internal.pageSize.getHeight()-20); }
+
+function exportDoc(kind, invs, sub, tag){
+  if(!invs.length){ toast('Nothing to download for this selection.'); return; }
+  const t = totalsOf(invs);
+  if(kind==='xlsx' || kind==='csv'){
+    const cols = chosenCols(); if(!cols.length) return;
+    const lr = lineRows(invs);
+    const body = lr.map(x=>cols.map(c=>c.f ? c.f(x) : (x[c.k]==null?'':x[c.k])));
+    const tot = cols.map((c,i)=> i===0 ? 'TOTAL' : c.sum ? sumBy(lr,c.k) : '');
+    if(kind==='xlsx'){
+      const aoa = [cols.map(c=>c.h), ...body, tot];
+      if(staffText()) aoa.push([], [staffText()]);
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = cols.map(c=>({wch: c.k==='item'?28 : c.k==='dealer'||c.k==='parcelCompany'?22 : 14}));
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Register');
+      XLSX.writeFile(wb, fname(tag,'xlsx'));
+    } else {
+      const q = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+      const lines = [cols.map(c=>q(c.h)).join(','), ...body.map(r=>r.map(q).join(',')), tot.map(q).join(',')];
+      if(staffText()) lines.push('', q(staffText()));
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+      a.download = fname(tag,'csv'); a.click(); URL.revokeObjectURL(a.href);
+    }
+    return;
+  }
+  const J = window.jspdf.jsPDF;
+  if(kind==='pdfMain'){
+    const doc = new J({orientation:'landscape', unit:'pt', format:'a4'});
+    pdfHead(doc, sub, t);
+    doc.autoTable({
+      startY: 82,
+      head: [['Date','Invoice No','Dealer','Items','Amount','Parcel Company','Parcel Amount']],
+      body: invs.map(g=>[fmtD(g.date), g.invoice, g.dealer, itemSummary(g), money(g.total), g.parcelCompany, g.parcel?money(g.parcel):'']),
+      foot: [['TOTAL','','','',money(t.amount),'',money(t.parcel)]],
+      showFoot: 'lastPage',
+      styles: {fontSize:9, cellPadding:4},
+      headStyles: {fillColor:[31,78,121]}, footStyles: {fillColor:[234,241,248], textColor:20, fontStyle:'bold'},
+      columnStyles: {4:{halign:'right'}, 6:{halign:'right'}},
+      didDrawPage: ()=>pageNo(doc)
+    });
+    pdfStaff(doc);
+    doc.save(fname(tag+'_Main','pdf'));
+  } else if(kind==='pdfDetail'){
+    const doc = new J({orientation:'portrait', unit:'pt', format:'a4'});
+    pdfHead(doc, sub, t);
+    const body = [];
+    invs.forEach(g=>{
+      body.push([{content: fmtD(g.date)+'    Invoice: '+(g.invoice||'-')+'    Dealer: '+g.dealer+
+        (g.parcelCompany||g.parcel ? '    Parcel: '+g.parcelCompany+(g.parcel?' '+money(g.parcel):'') : ''),
+        colSpan:4, styles:{fillColor:[234,241,248], fontStyle:'bold', textColor:20}}]);
+      g.lines.forEach(l=>body.push([l.item, String(l.unit), l.rate===''?'':money(l.rate), money(l.amount)]));
+      body.push([{content:'Invoice total', colSpan:3, styles:{halign:'right', fontStyle:'bold'}}, {content:money(g.total), styles:{halign:'right', fontStyle:'bold'}}]);
+    });
+    doc.autoTable({
+      startY: 82,
+      head: [['Item','Unit','Rate','Amount']],
+      body,
+      foot: [
+        [{content:'TOTAL AMOUNT', colSpan:3, styles:{halign:'right'}}, {content:money(t.amount), styles:{halign:'right'}}],
+        [{content:'TOTAL PARCEL AMOUNT', colSpan:3, styles:{halign:'right'}}, {content:money(t.parcel), styles:{halign:'right'}}]
+      ],
+      showFoot: 'lastPage',
+      styles: {fontSize:9, cellPadding:3.5},
+      headStyles: {fillColor:[31,78,121]}, footStyles: {fillColor:[234,241,248], textColor:20, fontStyle:'bold'},
+      columnStyles: {1:{halign:'right'}, 2:{halign:'right'}, 3:{halign:'right'}},
+      didDrawPage: ()=>pageNo(doc)
+    });
+    pdfStaff(doc);
+    doc.save(fname(tag+'_Detail','pdf'));
+  }
+}
+
+/* --- Download window --- */
+function openDownload(preset){
+  fillDealerOptions();
+  $('selN').textContent = selected.size ? '('+selected.size+')' : '(none ticked)';
+  $('rdSel').disabled = !selected.size;
+  const want = preset==='selected' && selected.size ? 'selected' : 'shown';
+  document.querySelector('input[name=scope][value='+want+']').checked = true;
+  $('dlFrom').value = $('flFrom').value; $('dlTo').value = $('flTo').value;
+  if($('flDealer').value) $('dlDealer').value = $('flDealer').value;
+  scopeUi();
+  $('mDownload').classList.add('show');
+}
+function fillDealerOptions(){ const cur=$('dlDealer').value; buildFilterOptions(); if(cur) $('dlDealer').value = cur; }
+function scopeVal(){ return document.querySelector('input[name=scope]:checked').value; }
+function scopeUi(){ $('dlDealerBox').style.display = scopeVal()==='dealer' ? 'grid' : 'none'; }
+document.querySelectorAll('input[name=scope]').forEach(r=>r.onchange=scopeUi);
+function scopeData(){
+  const s = scopeVal();
+  if(s==='selected'){
+    const invs = invAll.filter(g=>selected.has(g.groupId)).sort((a,b)=>a.date.localeCompare(b.date)||a.idx-b.idx);
+    return {invs, sub:'Ticked entries ('+invs.length+')', tag:'Selected'};
+  }
+  if(s==='dealer'){
+    const d=$('dlDealer').value, f=$('dlFrom').value, t=$('dlTo').value;
+    if(!d){ toast('Choose a dealer.'); return null; }
+    const invs = invAll.filter(g=>g.dealer===d && (!f||g.date>=f) && (!t||g.date<=t)).sort((a,b)=>a.date.localeCompare(b.date)||a.idx-b.idx);
+    return {invs, sub:'Dealer: '+d+'   |   Period: '+(f||t ? (f?fmtD(f):'start')+' to '+(t?fmtD(t):'latest') : 'all dates'), tag:safe(d)||'Dealer'};
+  }
+  const f=$('flFrom').value, t=$('flTo').value;
+  return {invs: filteredInvoices(), sub:'Period: '+(f||t ? (f?fmtD(f):'start')+' to '+(t?fmtD(t):'latest') : 'all dates'), tag:'Register'};
+}
+function dl(kind){ const d = scopeData(); if(d) exportDoc(kind, d.invs, d.sub, d.tag); }
+$('dlPdfMain').onclick = ()=>dl('pdfMain');
+$('dlPdfDetail').onclick = ()=>dl('pdfDetail');
+$('dlXlsx').onclick = ()=>dl('xlsx');
+$('dlCsv').onclick = ()=>dl('csv');
+$('colChoices').innerHTML = COLS.map(c=>'<label><input type="checkbox" id="col_'+c.k+'" checked> '+c.h+'</label>').join('');
+
+/* --- Dealer View downloads --- */
+function dvDl(kind){
+  const d = $('dvDealer').value; if(!d){ toast('Select a dealer first.'); return; }
+  exportDoc(kind, dvInvoices(), 'Dealer: '+d+'   |   Period: '+dvPeriodText(), safe(d)||'Dealer');
+}
+$('dvPdfMain').onclick = ()=>dvDl('pdfMain');
+$('dvPdfDetail').onclick = ()=>dvDl('pdfDetail');
+$('dvXlsx').onclick = ()=>dvDl('xlsx');
+
+/* ---------- events ---------- */
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('mousedown',e=>{ if(e.target===m) m.classList.remove('show'); }));
+$('btnSettings').onclick = ()=>{ $('setUrl').value = WEB_URL; $('mSettings').classList.add('show'); };
+$('btnDownload').onclick = ()=>openDownload('shown');
+$('btnDlSel').onclick = ()=>openDownload('selected');
+$('setSave').onclick = async ()=>{
+  WEB_URL = $('setUrl').value.trim(); localStorage.setItem(URL_KEY, WEB_URL);
+  $('mSettings').classList.remove('show');
+  if(await ping(false)){ toast('Connected to Google Sheet.'); loadAll(); }
+};
+$('status').onclick = async ()=>{ if(await ping(false)) toast('Connected to Google Sheet.'); };
+$('btnClear').onclick = clearFilters;
+$('btnReload').onclick = loadAll;
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>quick(b.dataset.q));
+$('flMonth').onchange = e=>{ const v=e.target.value; if(v) setRange(v+'-01', lastDay(v)); else setRange('',''); };
+['flFrom','flTo'].forEach(i=>$(i).onchange=()=>{ $('flMonth').value=''; render(); });
+['flDealer','flItem','flParcel','flHasParcel','flSort'].forEach(i=>$(i).onchange=render);
+['flRateMin','flRateMax','flAmtMin','flAmtMax','flPaMin','flPaMax','flSearch'].forEach(i=>$(i).oninput=render);
+
+// tabs
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x===b));
+  $('tabEntries').style.display = b.dataset.t==='entries' ? '' : 'none';
+  $('tabDealer').style.display = b.dataset.t==='dealer' ? '' : 'none';
+  if(b.dataset.t==='dealer') renderDealer();
+});
+// dealer view controls
+document.querySelectorAll('[data-dq]').forEach(b=>b.onclick=()=>{ const [f,t,m]=rangeFor(b.dataset.dq); dvSetRange(f,t,m); });
+$('dvMonth').onchange = e=>{ const v=e.target.value; v ? dvSetRange(v+'-01', lastDay(v), v) : dvSetRange('','',''); };
+['dvFrom','dvTo'].forEach(i=>$(i).onchange=()=>{ $('dvMonth').value=''; renderDealer(); });
+$('dvDealer').onchange = renderDealer;
+
+/* ---------- start ---------- */
+resetForm();
+quick('month');            // Entries opens on the current month
+{ const [f,t,m] = rangeFor('month'); $('dvFrom').value=f; $('dvTo').value=t; $('dvMonth').value=m; }
+buildFilterOptions();
+render(); renderDealer();
+ping(true).then(ok=>{ if(ok) loadAll(); });
+setInterval(()=>ping(true), 60000);   // connection light and staff name refresh every minute
+</script>
+</body>
+</html>
